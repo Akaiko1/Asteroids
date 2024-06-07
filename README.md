@@ -27,12 +27,8 @@ This project is a simple game built with C++ using the raylib library. It includ
 ### Building the Project
 
 1. Clone the repository:
-   ```sh
-   git clone https://github.com/yourusername/yourproject.git
-   cd yourproject
-   ```
 
-2. Create a build directory and navigate into it:
+2. Create a build directory inside project folder and navigate into it:
    ```sh
    mkdir build
    cd build
