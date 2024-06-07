@@ -1,0 +1,5 @@
+.vscode/
+binary/
+build/
+
+.DS_Store
