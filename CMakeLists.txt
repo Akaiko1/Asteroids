@@ -1,39 +1,56 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 17)
 
-#Set the project name. This is not the executable program's name!
+# Set the project name
 project(graphical_template)
 
+# Override raylib's cmake minimum version requirement
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 
-#Some CMake tomfoolery
-if(POLICY CMP0135)
-cmake_policy(SET CMP0135 NEW)
-endif()
-#End CMake tomfoolery
+# We don't want raylib's examples built
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-
-#Try to find a locally installed raylib, but don't quit on fail
+# Try to find a locally installed raylib
 find_package(raylib 5.0 QUIET)
 
-#This code downloads raylib into a directory called _deps and adds it as a subdirectory, compiling it with the program when running the build command
-include(FetchContent)
-if (NOT raylib_FOUND)
+# If not found, download and build raylib
+if(NOT raylib_FOUND)
+    # Include FetchContent module
+    include(FetchContent)
+    
+    # Download raylib 5.0
     FetchContent_Declare(
         raylib
         URL https://github.com/raysan5/raylib/archive/refs/tags/5.0.tar.gz
+        OVERRIDE_FIND_PACKAGE
     )
-    FetchContent_MakeAvailable(raylib)
+    
+    # Make raylib available
+    FetchContent_GetProperties(raylib)
+    if(NOT raylib_POPULATED)
+        set(FETCHCONTENT_QUIET OFF)
+        FetchContent_Populate(raylib)
+        
+        # These settings help avoid the CMake version errors
+        set(OLD_CMAKE_POLICY_DEFAULT_CMP0012 ${CMAKE_POLICY_DEFAULT_CMP0012})
+        set(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
+        
+        add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
+        
+        set(CMAKE_POLICY_DEFAULT_CMP0012 ${OLD_CMAKE_POLICY_DEFAULT_CMP0012})
+    endif()
 endif()
 
-#We don't want raylib's examples built. This option is picked up by raylib's CMakeLists.txt
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-#Here, the executable is declared with its sources. "main", or "main.exe" on windows will be the program's name
-add_executable(main ./src/main.cpp ./src/game.h ./src/game.cpp)
-
-#Link raylib to main
-target_link_libraries(main 
-    raylib
+# Create the game executable
+add_executable(main 
+    ./src/main.cpp 
+    ./src/game.h 
+    ./src/game.cpp
 )
-#Make main find the <raylib.h> header (and others)
-target_include_directories(main PUBLIC "${raylib_SOURCE_DIR}/src")
+
+# Link raylib to the main executable
+target_link_libraries(main PRIVATE raylib)
+
+# Make main find the raylib headers
+target_include_directories(main PRIVATE "${raylib_SOURCE_DIR}/src")
