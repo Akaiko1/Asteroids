@@ -1,9 +1,19 @@
-
 # Asteroids-Like Game Template
 
-## Overview
+A simple game template built with C++ and raylib that provides the foundation for an asteroids-style game. This is a work-in-progress template with basic functionality implemented.
 
-This project is a simple game built with C++ using the raylib library. It includes basic functionality such as player movement, enemy spawning, and collision detection.
+![Development Screenshot](src/assets/screenshot.png)
+
+## Current Status
+
+This is a **development template** that implements basic functionality:
+- Simple player movement and attack mechanics
+- Basic enemy spawning and behavior
+- Collision detection between player attacks and enemies
+- Game state management (menu, playing, paused, game over)
+- Wave-based progression system
+
+**Note:** This is not a complete game, but rather a starting point for your own game development.
 
 ## Directory Structure
 
@@ -13,8 +23,10 @@ This project is a simple game built with C++ using the raylib library. It includ
 ├── src               # Source code directory
 │   ├── game.h        # Header file for game classes
 │   ├── game.cpp      # Implementation file for game classes
-│   └── main.cpp      # Main entry point for the game
-└── __MACOSX          # System folder (can be ignored)
+│   ├── main.cpp      # Main entry point for the game
+│   └── assets/       # Game assets directory
+│       └── screenshot.png # Development screenshot
+└── .gitignore        # Git ignore file
 ```
 
 ## Getting Started
@@ -23,23 +35,22 @@ This project is a simple game built with C++ using the raylib library. It includ
 
 - CMake version 3.10 or higher
 - A C++ compiler (e.g., g++, clang++)
+- raylib (automatically downloaded by CMake if not found)
 
 ### Building the Project
 
 1. Clone the repository:
-
-2. Create a build directory inside project folder and navigate into it:
    ```sh
    mkdir build
    cd build
    ```
 
-3. Run CMake to configure the project:
+2. Run CMake to configure the project:
    ```sh
    cmake ..
    ```
 
-4. Build the project:
+3. Build the project:
    ```sh
    make
    ```
@@ -51,46 +62,52 @@ After building, you can run the executable generated in the `build` directory:
    ./main
    ```
 
+## Basic Controls
+
+- **Movement**: WASD or Arrow Keys
+- **Attack**: Spacebar
+- **Pause**: P or ESC
+- **Start/Restart**: Enter
+
 ## Code Overview
 
 ### Player Class
 
 Manages player attributes and behaviors:
-- `Player(float x, float y, float size, float speed)`: Constructor to initialize player.
-- `void Update()`: Updates the player's state.
-- `void Draw() const`: Draws the player on the screen.
-- `Rectangle GetRectangle() const`: Returns the player's bounding box.
-- `bool IsAttacking() const`: Checks if the player is attacking.
+- Movement and screen boundary handling
+- Attack mechanics
+- Health system with temporary invulnerability
 
 ### Enemy Class
 
-Manages enemy attributes and behaviors:
-- `Enemy(float x, float y, float size, float speedX, float speedY, int health, Color color)`: Constructor to initialize an enemy.
-- `void Update()`: Updates the enemy's state.
-- `void Draw() const`: Draws the enemy on the screen.
-- `void OnHit()`: Handles logic when an enemy is hit.
-- `Rectangle GetRectangle() const`: Returns the enemy's bounding box.
-- `int GetHealth() const`: Returns the enemy's health.
+Handles enemy functionality:
+- Movement patterns (currently simple bouncing)
+- Health tracking
+- Collision response
 
 ### Game Class
 
 Controls the overall game logic:
-- `Game()`: Constructor to initialize the game.
-- `void Run()`: Runs the main game loop.
-- `void SpawnEnemies(int count, int health, Color color)`: Spawns a specified number of enemies.
-- `void CheckCollisions()`: Checks for collisions between player attacks and enemies.
-- `Rectangle GetAttackArea(const Rectangle& playerRect)`: Gets the player's attack area.
-- `void HandleEnemyHit(std::unique_ptr<Enemy>& enemy)`: Handles logic when an enemy is hit.
-- `void RemoveDeadEnemies()`: Removes dead enemies from the list.
+- Game state management
+- Enemy spawning
+- Collision detection
+- Wave progression
+
+## Planned Improvements
+
+- Proper asteroid-style physics with momentum
+- Ship rotation and directional movement
+- Better collision detection and response
+- Proper graphics instead of primitive shapes
+- Sound effects and music
+- Particle effects for explosions and movement
+- Power-ups and special abilities
+- More enemy types with different behaviors
+- A scoring and high-score system
 
 ## Contributing
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -am 'Add new feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Open a pull request.
+Feel free to fork this repository and use it as a starting point for your own game. If you make improvements to the template itself, pull requests are welcome!
 
 ## License
 
