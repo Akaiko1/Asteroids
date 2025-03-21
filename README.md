@@ -7,6 +7,7 @@ A simple game template built with C++ and raylib that provides the foundation fo
 ## Current Status
 
 This is a **development template** that implements basic functionality:
+
 - Simple player movement and attack mechanics
 - Basic enemy spawning and behavior
 - Collision detection between player attacks and enemies
@@ -40,17 +41,20 @@ This is a **development template** that implements basic functionality:
 ### Building the Project
 
 1. Clone the repository:
+
    ```sh
    mkdir build
    cd build
    ```
 
 2. Run CMake to configure the project:
+
    ```sh
    cmake ..
    ```
 
 3. Build the project:
+
    ```sh
    make
    ```
@@ -58,6 +62,7 @@ This is a **development template** that implements basic functionality:
 ### Running the Project
 
 After building, you can run the executable generated in the `build` directory:
+
    ```sh
    ./main
    ```
@@ -74,6 +79,7 @@ After building, you can run the executable generated in the `build` directory:
 ### Player Class
 
 Manages player attributes and behaviors:
+
 - Movement and screen boundary handling
 - Attack mechanics
 - Health system with temporary invulnerability
@@ -81,6 +87,7 @@ Manages player attributes and behaviors:
 ### Enemy Class
 
 Handles enemy functionality:
+
 - Movement patterns (currently simple bouncing)
 - Health tracking
 - Collision response
@@ -88,6 +95,7 @@ Handles enemy functionality:
 ### Game Class
 
 Controls the overall game logic:
+
 - Game state management
 - Enemy spawning
 - Collision detection

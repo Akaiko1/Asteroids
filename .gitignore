@@ -3,3 +3,4 @@ binary/
 build/
 
 .DS_Store
+_deps/

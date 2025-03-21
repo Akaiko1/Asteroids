@@ -107,6 +107,12 @@ private:
     float attackRadius;
     float invulnerabilityTimer;
     bool isInvulnerable;
+    float rotation;      // Rotation angle in degrees
+    Vector2 position;    // Center position of the player
+    Vector2 velocity;    // Current velocity vector
+    float rotationSpeed; // How quickly the ship rotates
+    float acceleration;  // Movement acceleration
+    float drag;          // Deceleration factor
 };
 
 class Enemy {
@@ -117,6 +123,7 @@ public:
     void OnHit(int damage = 1);
     Rectangle GetRectangle() const;
     int GetHealth() const;
+    int GetPoints() const;
 
 private:
     Rectangle enemy;
@@ -149,8 +156,8 @@ private:
     void Initialize();
     void Update(float deltaTime);
     void Draw();
-    void SpawnEnemies(int count, int health, Color color);
-    void CheckCollisions();
+    void SpawnEnemies(int count);
+    void CheckAttackCollisions();
     void CheckPlayerEnemyCollisions();
     Rectangle GetAttackArea(const Rectangle& playerRect);
     void HandleEnemyHit(std::unique_ptr<Enemy>& enemy);

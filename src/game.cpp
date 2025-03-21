@@ -53,19 +53,19 @@ void ConfigManager::LoadConfigs() {
     
     // Wave 1 enemies
     enemyConfigs[0].size = 50.0f;
-    enemyConfigs[0].speed = 3.0f;
+    enemyConfigs[0].speed = 1.0f;
     enemyConfigs[0].health = 1;
     enemyConfigs[0].color = RED;
     
     // Wave 2 enemies
     enemyConfigs[1].size = 45.0f;
-    enemyConfigs[1].speed = 4.0f;
+    enemyConfigs[1].speed = 2.0f;
     enemyConfigs[1].health = 2;
     enemyConfigs[1].color = MAROON;
     
     // Wave 3 enemies
     enemyConfigs[2].size = 40.0f;
-    enemyConfigs[2].speed = 5.0f;
+    enemyConfigs[2].speed = 3.0f;
     enemyConfigs[2].health = 3;
     enemyConfigs[2].color = DARKPURPLE;
     
@@ -115,18 +115,96 @@ Player::Player(const EntityConfig& config, float startX, float startY)
       health(config.health),
       attackRadius(config.size * 1.5f),
       invulnerabilityTimer(0.0f),
-      isInvulnerable(false) {}
+      isInvulnerable(false),
+      rotation(0.0f),
+      position{ startX + config.size/2, startY + config.size/2 },
+      velocity{ 0, 0 },
+      rotationSpeed(1.0f),
+      acceleration(0.2f),
+      drag(0.98f) {}
 
 void Player::Update(const InputHandler& input) {
-    // Move based on input
-    if (input.IsMovingRight()) player.x += speed;
-    if (input.IsMovingLeft()) player.x -= speed;
-    if (input.IsMovingUp()) player.y -= speed;
-    if (input.IsMovingDown()) player.y += speed;
+    // Handle rotation based on direction
+    bool isMoving = false;
+    
+    // Calculate target rotation based on input
+    float targetRotation = rotation;
+    
+    if (input.IsMovingRight() && input.IsMovingUp()) {
+        targetRotation = 315.0f; // Up-right
+        isMoving = true;
+    } else if (input.IsMovingRight() && input.IsMovingDown()) {
+        targetRotation = 45.0f; // Down-right
+        isMoving = true;
+    } else if (input.IsMovingLeft() && input.IsMovingUp()) {
+        targetRotation = 225.0f; // Up-left
+        isMoving = true;
+    } else if (input.IsMovingLeft() && input.IsMovingDown()) {
+        targetRotation = 135.0f; // Down-left
+        isMoving = true;
+    } else if (input.IsMovingRight()) {
+        targetRotation = 0.0f; // Right
+        isMoving = true;
+    } else if (input.IsMovingLeft()) {
+        targetRotation = 180.0f; // Left
+        isMoving = true;
+    } else if (input.IsMovingUp()) {
+        targetRotation = 270.0f; // Up
+        isMoving = true;
+    } else if (input.IsMovingDown()) {
+        targetRotation = 90.0f; // Down
+        isMoving = true;
+    }
+    
+    // Smoothly rotate towards target direction
+    if (isMoving) {
+        // Find the shortest path to rotate
+        float diff = targetRotation - rotation;
+        if (diff > 180.0f) diff -= 360.0f;
+        if (diff < -180.0f) diff += 360.0f;
+        
+        // Apply rotation with the rotation speed
+        rotation += diff * 0.1f * rotationSpeed;
+        
+        // Keep rotation in 0-360 range
+        if (rotation < 0) rotation += 360.0f;
+        if (rotation >= 360.0f) rotation -= 360.0f;
+        
+        // Apply acceleration in the direction of rotation
+        float radians = rotation * DEG2RAD;
+        velocity.x += cos(radians) * acceleration;
+        velocity.y += sin(radians) * acceleration;
+    }
+    
+    // Apply drag to slow down
+    velocity.x *= drag;
+    velocity.y *= drag;
+    
+    // Update position
+    position.x += velocity.x;
+    position.y += velocity.y;
+    
+    // Update rectangle position for collision detection
+    player.x = position.x - player.width/2;
+    player.y = position.y - player.height/2;
     
     // Keep player within screen bounds
-    player.x = std::max(0.0f, std::min(player.x, static_cast<float>(GetScreenWidth() - player.width)));
-    player.y = std::max(0.0f, std::min(player.y, static_cast<float>(GetScreenHeight() - player.height)));
+    if (position.x < player.width/2) {
+        position.x = player.width/2;
+        velocity.x = 0;
+    }
+    if (position.x > GetScreenWidth() - player.width/2) {
+        position.x = GetScreenWidth() - player.width/2;
+        velocity.x = 0;
+    }
+    if (position.y < player.height/2) {
+        position.y = player.height/2;
+        velocity.y = 0;
+    }
+    if (position.y > GetScreenHeight() - player.height/2) {
+        position.y = GetScreenHeight() - player.height/2;
+        velocity.y = 0;
+    }
     
     // Set attacking state
     attacking = input.IsAttacking();
@@ -141,27 +219,38 @@ void Player::Update(const InputHandler& input) {
 }
 
 void Player::Draw() const {
-    // Flicker if invulnerable
-    if (isInvulnerable) {
-        if (static_cast<int>(invulnerabilityTimer * 10) % 2 == 0) {
-            DrawRectangleRec(player, BLUE);
-        }
-    } else {
-        DrawRectangleRec(player, BLUE);
-    }
+    // Define the triangular ship vertices
+    Vector2 v1, v2, v3;
+    float shipSize = player.width * 0.8f;
+    float radians = rotation * DEG2RAD;
+    
+    // Calculate vertices for a triangle pointing in the direction of rotation
+    v1.x = position.x + cos(radians) * shipSize;
+    v1.y = position.y + sin(radians) * shipSize;
+    
+    v2.x = position.x + cos(radians - 2.5f) * (shipSize * 0.6f);
+    v2.y = position.y + sin(radians - 2.5f) * (shipSize * 0.6f);
+
+    v3.x = position.x + cos(radians + 2.5f) * (shipSize * 0.6f);
+    v3.y = position.y + sin(radians + 2.5f) * (shipSize * 0.6f);
+    
+    // Draw the triangle ship
+    Color shipColor = isInvulnerable ? 
+        ((static_cast<int>(invulnerabilityTimer * 10) % 2 == 0) ? BLUE : SKYBLUE) : 
+        BLUE;
+    
+    DrawTriangle(v1, v2, v3, shipColor);
     
     // Draw health indicators
     for (int i = 0; i < health; i++) {
         DrawRectangle(10 + i * 30, 10, 20, 20, RED);
     }
     
+    // Draw attack radius if attacking
     if (attacking) {
-        DrawCircleLines(
-            player.x + player.width / 2, 
-            player.y + player.height / 2, 
-            attackRadius, 
-            RED
-        );
+        for (int i = 0; i < 3; i++) {
+            DrawCircleLines(position.x, position.y, attackRadius + i, RED);
+        }
     }
 }
 
@@ -193,8 +282,8 @@ bool Player::IsAlive() const {
 Enemy::Enemy(const EntityConfig& config, float x, float y, float speedX, float speedY)
     : enemy{ x, y, config.size, config.size }, 
       color(config.color),
-      speedX(speedX), 
-      speedY(speedY), 
+      speedX(speedX + config.speed), // Add base speed to random speed
+      speedY(speedY + config.speed), 
       health(config.health),
       points(health * 100) {}
 
@@ -220,7 +309,13 @@ void Enemy::Update(float deltaTime) {
 }
 
 void Enemy::Draw() const {
-    DrawRectangleRec(enemy, color);
+
+    DrawCircle(
+        enemy.x + enemy.width/2, 
+        enemy.y + enemy.height/2, 
+        enemy.width/2, 
+        color
+    );
     
     // Draw health bar above enemy
     Rectangle healthBar = { enemy.x, enemy.y - 10, enemy.width, 5 };
@@ -228,7 +323,7 @@ void Enemy::Draw() const {
     Rectangle currentHealth = { 
         enemy.x, 
         enemy.y - 10, 
-        (enemy.width * health) / (points / 100), // Scale based on initial health
+        (enemy.width * health) / (points / 100), // Scale based on initial health (which is points/100)
         5 
     };
     DrawRectangleRec(currentHealth, GREEN);
@@ -244,6 +339,10 @@ Rectangle Enemy::GetRectangle() const {
 
 int Enemy::GetHealth() const {
     return health;
+}
+
+int Enemy::GetPoints() const {
+    return points;
 }
 
 // Game class implementation
@@ -276,13 +375,14 @@ void Game::Initialize() {
         screenWidth / 2.0f - playerConfig.size / 2,
         screenHeight / 2.0f - playerConfig.size / 2
     );
+    score = 0; // Reset score
     
     // Clear enemies vector to start fresh
     enemies.clear();
 }
 
 void Game::Run() {
-    InitWindow(screenWidth, screenHeight, "Asteroids-Like Game");
+    InitWindow(screenWidth, screenHeight, "Asteroids!");
     SetTargetFPS(60);
     
     // Game loop
@@ -333,7 +433,7 @@ void Game::Draw() {
     switch (gameState) {
         case GameState::MENU:
             // Menu UI
-            DrawText("ASTEROIDS-LIKE GAME", screenWidth / 2 - MeasureText("ASTEROIDS-LIKE GAME", 40) / 2, screenHeight / 4, 40, BLACK);
+            DrawText("ASTEROIDS!", screenWidth / 2 - MeasureText("ASTEROIDS!", 40) / 2, screenHeight / 4, 40, BLACK);
             DrawText("Press ENTER to start", screenWidth / 2 - MeasureText("Press ENTER to start", 20) / 2, screenHeight / 2, 20, DARKGRAY);
             DrawText("Move with WASD or Arrow Keys", screenWidth / 2 - MeasureText("Move with WASD or Arrow Keys", 20) / 2, screenHeight / 2 + 40, 20, DARKGRAY);
             DrawText("Attack with SPACE", screenWidth / 2 - MeasureText("Attack with SPACE", 20) / 2, screenHeight / 2 + 70, 20, DARKGRAY);
@@ -382,12 +482,12 @@ void Game::Draw() {
     EndDrawing();
 }
 
-void Game::SpawnEnemies(int count, int health, Color color) {
+void Game::SpawnEnemies(int count) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> disPosX(0, screenWidth - 50);
     std::uniform_real_distribution<> disPosY(0, screenHeight - 50);
-    std::uniform_real_distribution<> disSpeed(1, 5);
+    std::uniform_real_distribution<> disSpeed(0, 2);
     
     const EntityConfig& enemyConfig = configManager->GetEnemyConfig(scenario.currentWave);
     
@@ -416,7 +516,7 @@ void Game::SpawnEnemies(int count, int health, Color color) {
     }
 }
 
-void Game::CheckCollisions() {
+void Game::CheckAttackCollisions() {
     if (!player->IsAttacking()) {
         return;
     }
@@ -473,7 +573,7 @@ void Game::HandleEnemyHit(std::unique_ptr<Enemy>& enemy) {
     enemy->OnHit();
     
     if (enemy->GetHealth() <= 0) {
-        score += 100 * (scenario.currentWave + 1);
+        score += enemy->GetPoints() * (scenario.currentWave + 1);
     }
 }
 
@@ -487,10 +587,7 @@ void Game::RemoveDeadEnemies() {
 
 void Game::StartNewWave() {
     scenario.currentWave++;
-    int enemiesToSpawn = scenario.enemiesPerWave * (1 + scenario.currentWave / 2);
-    
-    const EntityConfig& enemyConfig = configManager->GetEnemyConfig(scenario.currentWave);
-    SpawnEnemies(enemiesToSpawn, enemyConfig.health, enemyConfig.color);
+    SpawnEnemies(scenario.enemiesPerWave);
 }
 
 void Game::GameOver() {
@@ -519,9 +616,7 @@ void Game::HandleMenuState() {
         
         // Start first wave
         SpawnEnemies(
-            scenario.enemiesPerWave,
-            configManager->GetEnemyConfig(0).health,
-            configManager->GetEnemyConfig(0).color
+            scenario.enemiesPerWave
         );
         
         gameState = GameState::PLAYING;
@@ -547,7 +642,7 @@ void Game::HandlePlayingState(float deltaTime) {
     }
     
     // Check collisions
-    CheckCollisions();
+    CheckAttackCollisions();
     CheckPlayerEnemyCollisions();
 }
 
