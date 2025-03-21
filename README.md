@@ -1,4 +1,4 @@
-# Asteroids-Like Game Template
+# Asteroids! Game Template
 
 A simple game template built with C++ and raylib that provides the foundation for an asteroids-style game. This is a work-in-progress template with basic functionality implemented.
 
@@ -59,6 +59,12 @@ This is a **development template** that implements basic functionality:
    make
    ```
 
+   or
+
+   ```sh
+   cmake --build . --config Release
+   ```
+
 ### Running the Project
 
 After building, you can run the executable generated in the `build` directory:
@@ -101,10 +107,13 @@ Controls the overall game logic:
 - Collision detection
 - Wave progression
 
-## Planned Improvements
+## Features
 
 - Proper asteroid-style physics with momentum
 - Ship rotation and directional movement
+
+## Planned Improvements
+
 - Better collision detection and response
 - Proper graphics instead of primitive shapes
 - Sound effects and music
